@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "appwrite": "^14.0.1"
+    "appwrite": "^16.0.2"
   }
 }
