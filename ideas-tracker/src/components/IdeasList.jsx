@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { databases, storage, databaseID, collectionID } from '../appwriteConfig';
+import { databases, storage, databaseID, collectionID, bucketID } from '../appwriteConfig';
 
 const IdeasList = ({ ideas, setIdeas }) => {
   const [editingId, setEditingId] = useState(null);
@@ -17,7 +17,7 @@ const IdeasList = ({ ideas, setIdeas }) => {
       try {
         for (const idea of ideas) {
           if (idea.imageId) {
-            const response = await storage.getFilePreview(idea.imageId);
+            const response = await storage.getFilePreview(bucketID, idea.imageId);
             newImages[idea.imageId] = response.href;
           }
         }

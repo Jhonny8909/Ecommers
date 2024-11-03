@@ -8,22 +8,24 @@ import Register from './components/Register';
 const App = () => {
   const [user, setUser] = useState(null);
   const [ideas, setIdeas] = useState([]);
-  const [showRegister, setShowRegister] = useState(false); // Definir el estado `showRegister`
+  const [showRegister, setShowRegister] = useState(false);
+  const [error, setError] = useState('');
 
   const toggleForm = () => setShowRegister(!showRegister);
 
   const loginUser = async (email, password) => {
     try {
-      const session = await account.createEmailPasswordSession(email, password);
+      const session = await account.createEmailSession(email, password);
       setUser(session);
-      fetchIdeas(); // Llama a fetchIdeas después de iniciar sesión
+      fetchIdeas();
+      setError(''); 
+      console.log('User logged in:', session);
     } catch (error) {
+      setError('Login failed: ' + error.message);
       console.error("Error logging in:", error);
-      alert("Login failed: " + error.message);
     }
   };
 
-  // Obtener ideas desde Appwrite
   const fetchIdeas = async () => {
     try {
       const response = await databases.listDocuments(databaseID, collectionID);
@@ -33,15 +35,25 @@ const App = () => {
     }
   };
 
-  // Agregar una nueva idea al Appwrite Database
-  const addIdea = async (content,imageId) => {
+  const addIdea = async (content, imageId) => {
     try {
       await databases.createDocument(databaseID, collectionID, 'unique()', { content, imageId });
-      fetchIdeas(); // Actualiza la lista de ideas después de agregar
+      fetchIdeas();
       alert("Idea saved successfully!");
     } catch (error) {
       console.error("Error adding idea:", error);
       alert("Error saving idea: " + error.message);
+    }
+  };
+
+  const logoutUser = async () => {
+    try {
+      await account.deleteSession('current');
+      setUser(null);
+      alert("Logged out successfully!");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      alert("Logout failed: " + error.message);
     }
   };
 
@@ -50,17 +62,17 @@ const App = () => {
       try {
         const currentUser = await account.get();
         setUser(currentUser);
-        console.log("User logged in:", currentUser);
-      } catch (error) {
-        console.log("No user logged in"); // No es necesario mostrar el error si el usuario no está autenticado
+        fetchIdeas();
+      } catch {
+        console.log("No user logged in");
       }
     };
     getUser();
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    loginUser(email, password);
+  const handleRegister = (newUser) => {
+    setUser(newUser);
+    console.log('User registered:', newUser);
   };
 
   return (
@@ -68,7 +80,7 @@ const App = () => {
       <h1>Ideas Tracker</h1>
       {!user ? (
         showRegister ? (
-          <Register onRegister={() => setShowRegister(false)} />
+          <Register onRegister={handleRegister} />
         ) : (
           <Login loginUser={loginUser} />
         )
@@ -76,6 +88,7 @@ const App = () => {
         <>
           <IdeaForm addIdea={addIdea} />
           <IdeasList ideas={ideas} setIdeas={setIdeas} />
+          <button onClick={logoutUser}>Logout</button> {/* Botón de cierre de sesión */}
         </>
       )}
       <button onClick={toggleForm}>
