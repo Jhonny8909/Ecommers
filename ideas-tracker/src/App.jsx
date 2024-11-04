@@ -15,7 +15,7 @@ const App = () => {
 
   const loginUser = async (email, password) => {
     try {
-      const session = await account.createEmailSession(email, password);
+      const session = await account.createEmailPasswordSession(email, password);
       setUser(session);
       fetchIdeas();
       setError(''); 
